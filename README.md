@@ -20,7 +20,7 @@ hardware ecosystems.
 - Arithmetic Logic Unit (ALU): Performs arithmetic and logical operations based on the instruction's operation field.
 - Register File Write: Writes the result value from the ALU back to the destination register specified in the instruction.
 - DMem: Manages data memory operations, necessary for store and load instructions.
-https://github.com/disharnadas/Implementation-of-a-32-bit-RISC-V-CPU-Core-using-Transaction--Level-Verilog/blob/main/images/RISC-V_CPU_Block_Diagram.png
+![image](https://github.com/disharnadas/Implementation-of-a-32-bit-RISC-V-CPU-Core-using-Transaction--Level-Verilog/blob/main/images/RISC-V_CPU_Block_Diagram.png)
 
 
 
@@ -33,6 +33,7 @@ https://github.com/disharnadas/Implementation-of-a-32-bit-RISC-V-CPU-Core-using-
    fetching instructions from memory based on the program counter value and controlling the instruction memory read operation.
   
 2. **Decode**
+
    During decode, the processor identifies instruction types and formats, enabling appropriate processing.
    There are 6 types of Instructions:
 
@@ -66,6 +67,7 @@ Outputs:
     Execution stage involves the operation of both operands based on the opcode.
 
 5. **Control Logic**
+
     * Control logic handles branch target address calculation during the decode stage and verifies branch conditions before execution.
     * During Decode Stage, branch target address is calculated and fed into PC mux. Before Execute Stage, once the operands are ready branch condition is checked.
 
@@ -83,14 +85,16 @@ Output:
 - Read_Data - Data to be read from Address (Load Instruction)
 
 7. **Completing the RISC-V CPU**
+
     The RISC-V CPU design is completed with the addition of jump instructions, ensuring comprehensive instruction decoding and ALU functionality for all instructions in the RV32I base integer instruction set.
     Below is final Snapshot of the Complete Pipelined RISC-V CPU.
-    https://github.com/disharnadas/Implementation-of-a-32-bit-RISC-V-CPU-Core-using-Transaction--Level-Verilog/blob/main/images/Final_CPU.png
-    Simulation Passed:
-    https://github.com/disharnadas/Implementation-of-a-32-bit-RISC-V-CPU-Core-using-Transaction--Level-Verilog/blob/main/images/SIMULATION_PASSED.png
+    ![image](https://github.com/disharnadas/Implementation-of-a-32-bit-RISC-V-CPU-Core-using-Transaction--Level-Verilog/blob/main/images/Final_CPU.png)
+    * Simulation Passed:
+    ![image](https://github.com/disharnadas/Implementation-of-a-32-bit-RISC-V-CPU-Core-using-Transaction--Level-Verilog/blob/main/images/SIMULATION_PASSED.png)
 
 
 **Acknowledgement**
+
     Acknowledgments are extended to [Steve Hoover](https://github.com/stevehoover), Founder, Redwood EDA.
 
 
