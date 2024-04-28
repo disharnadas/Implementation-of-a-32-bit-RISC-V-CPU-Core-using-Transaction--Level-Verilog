@@ -20,6 +20,7 @@ hardware ecosystems.
 - Arithmetic Logic Unit (ALU): Performs arithmetic and logical operations based on the instruction's operation field.
 - Register File Write: Writes the result value from the ALU back to the destination register specified in the instruction.
 - DMem: Manages data memory operations, necessary for store and load instructions.
+
 ![image](https://github.com/disharnadas/Implementation-of-a-32-bit-RISC-V-CPU-Core-using-Transaction--Level-Verilog/blob/main/images/RISC-V_CPU_Block_Diagram.png)
 
 
@@ -88,8 +89,11 @@ Output:
 
     The RISC-V CPU design is completed with the addition of jump instructions, ensuring comprehensive instruction decoding and ALU functionality for all instructions in the RV32I base integer instruction set.
     Below is final Snapshot of the Complete Pipelined RISC-V CPU.
+
     ![image](https://github.com/disharnadas/Implementation-of-a-32-bit-RISC-V-CPU-Core-using-Transaction--Level-Verilog/blob/main/images/Final_CPU.png)
+
     * Simulation Passed:
+
     ![image](https://github.com/disharnadas/Implementation-of-a-32-bit-RISC-V-CPU-Core-using-Transaction--Level-Verilog/blob/main/images/SIMULATION_PASSED.png)
 
 
