@@ -45,12 +45,13 @@
    
    $reset = *reset;
    //program counter
+   `READONLY_MEM($pc, $$instr[31:0]);
    $pc[31:0] = >>1$next_pc;
-   $next_pc[31:0] = $reset?32'b00:
+   $next_pc[31:0] = $reset?32'b0:
                     $taken_br | $is_jal? $br_tgt_pc:
                     $is_jalr? $jalr_tgt_pc:
                     $pc + 32'b100;;
-   `READONLY_MEM($pc, $$instr[31:0]);
+   
    //Decode logic
    $is_u_instr = $instr[6:2] ==? 5'b0x101;
    $is_b_instr = $instr[6:2] == 5'b11000;
@@ -62,17 +63,18 @@
    $is_i_instr = $instr[6:2] ==? 5'b0000x ||
                  $instr[6:2] ==? 5'b001x0 ||
                  $instr[6:2] == 5'b11001;
+   $rs2_valid = $is_r_instr || $is_s_instr || $is_b_instr;
+   $rs1_valid = $is_r_instr || $is_i_instr || $is_s_instr || $is_b_instr;
+   $rd_valid = $is_r_instr || $is_i_instr || $is_u_instr || $is_j_instr;
+   $funct3_valid = $is_r_instr || $is_i_instr || $is_s_instr || $is_b_instr;
+   $imm_valid = $is_u_instr || $is_i_instr || $is_s_instr || $is_b_instr || $is_j_instr;
    $rs2[4:0] = $instr[24:20];
    $rs1[4:0] = $instr[19:15];
    $rd[4:0] = $instr[11:7];
    $funct3[2:0] = $instr[14:12];
    $opcode[6:0] = $instr[6:0];
    
-   $rs2_valid = $is_r_instr || $is_s_instr || $is_b_instr;
-   $rs1_valid = $is_r_instr || $is_i_instr || $is_s_instr || $is_b_instr;
-   $rd_valid = $is_r_instr || $is_i_instr || $is_u_instr || $is_j_instr;
-   $funct3_valid = $is_r_instr || $is_i_instr || $is_s_instr || $is_b_instr;
-   $imm_valid = $is_u_instr || $is_i_instr || $is_s_instr || $is_b_instr || $is_j_instr;
+   
    `BOGUS_USE($rd $rd_valid $rs1 $rs1_valid $rs2 $rs2_valid $funct3 $funct3_valid $opcode $imm_valid )
    
    $imm[31:0] = $is_i_instr ? { {21{$instr[31]}}, $instr[30:20] } :
@@ -95,7 +97,7 @@
    $is_jalr = $dec_bits ==? 11'bx_000_1100111;
    $is_jal = $dec_bits ==? 11'bx_xxx_1101111;
    $is_auipc = $dec_bits ==? 11'bx_xxx_0010111;
-   $is_lui = $dec_bits ==? 11'bx_xxx_0110111;
+   $is_lui = $dec_bits ==? 11'bx_xxx_1101111;
    $is_sltiu = $dec_bits ==? 11'bx_011_0010011;
    $is_xori = $dec_bits ==? 11'bx_100_0010011;
    $is_ori = $dec_bits ==? 11'bx_110_0010011;
@@ -117,7 +119,7 @@
    `BOGUS_USE($imm $dec_bits $is_beq $is_bne $is_blt $is_bge $is_bltu $is_bgeu $is_addi $is_add )
    //ALU logic
    //Subexpressions
-   //SLTU and SLTIU (Set if Less Than (Immediate), Unisgned) results:
+   //SLTU and SLTIU (Set if Less Than (Immediate), Unassigned) results:
    $sltu_rslt[31:0] = {31'b0, $src1_value < $src2_value};
    $sltiu_rslt[31:0] = {31'b0, $src1_value < $imm};
    //SRA and SRAI (Shift Right, Arithmetic (Immediate) results:
@@ -132,9 +134,8 @@
                    $is_andi ? $src1_value & $imm :
                    $is_ori ? $src1_value | $imm :
                    $is_xori ? $src1_value ^ $imm :
-                   $is_addi ? $src1_value + $imm :
-                   $is_slli ? $src1_value << $imm[4:0] :
-                   $is_srli ? $src1_value >> $imm[4:0] :
+                   $is_slli ? $src1_value << $imm[5:0] :
+                   $is_srli ? $src1_value >> $imm[5:0] :
                    $is_and ? $src1_value & $src2_value :
                    $is_or ? $src1_value | $src2_value :
                    $is_xor ? $src1_value ^ $src2_value :
@@ -156,19 +157,17 @@
                              {31'b0, $src1_value[31]} :
                    $is_sra ? $sra_rslt[31:0] :
                    $is_srai ? $srai_rslt[31:0] :
-		   $is_load ? ($src1_value + $imm) :
+                   $is_load ? ($src1_value + $imm) :
                    $is_s_instr ? ($src1_value + $imm) :
                    32'b0; //default
     
    //branch logic 
-   $is_b = $is_beq || $is_bne || $is_blt || $is_bge || $is_bltu || $is_bgeu;
-   $taken_br = $is_b ?
-               ($is_beq && ($src1_value == $src2_value) ? 1'b1 :
-               $is_bne && ($src1_value != $src2_value) ? 1'b1 :
-               $is_blt && (($src1_value < $src2_value) ^ ($src1_value[31] != $src2_value[31])) ? 1'b1 :
-               $is_bge && (($src1_value >= $src2_value) ^ ($src1_value[31] != $src2_value[31])) ? 1'b1 :
-               $is_bltu && ($src1_value < $src2_value) ? 1'b1 :
-               $is_bgeu && ($src1_value >= $src2_value) ? 1'b1 :1'b0) :
+    $taken_br = $is_beq ? ($src1_value == $src2_value) :
+               $is_bne ? ($src1_value != $src2_value) :
+               $is_blt ? (($src1_value < $src2_value) ^ ($src1_value[31]!=$src2_value[31])) :
+               $is_bge ? (($src1_value >= $src2_value) ^ ($src1_value[31]!=$src2_value[31])) :
+               $is_bltu ? ($src1_value < $src2_value) :
+               $is_bgeu ? ($src1_value >= $src2_value) :
                1'b0;
    $br_tgt_pc[31:0] = $pc + $imm;
    $jalr_tgt_pc[31:0] = $src1_value + $imm;
@@ -188,7 +187,7 @@
    //m4+rf(32, 32, $reset, $wr_en, $wr_index[4:0], $wr_data[31:0], $rd_en1, $rd_index1[4:0], $rd_data1, $rd_en2, $rd_index2[4:0], $rd_data2)
    m4+rf(32, 32, $reset, $rd_valid, $rd[4:0], $rf_w, $rs1_valid, $rs1[4:0], $src1_value, $rs2_valid, $rs2[4:0], $src2_value)
    
-   m4+dmem(32, 32, $reset, $result, $is_s_instr, $src2_value, $is_load, $ld_data)
+   m4+dmem(32, 32, $reset, $result[6:2], $is_s_instr, $src2_value[31:0], $is_load, $ld_data)
    m4+cpu_viz()
 \SV
    endmodule
